@@ -22,20 +22,22 @@ const confirmUserDeletion = () => {
 };
 
 const deleteUser = () => {
-    form.delete(route('profile.destroy'), {
+   /* form.delete(route('profile.destroy'), {
         preserveScroll: true,
         onSuccess: () => closeModal(),
         onError: () => passwordInput.value.focus(),
-        onFinish: () => form.reset(),
-    });
+        onFinish: () => form.reset(), 
+    });*/
 };
 
 const closeModal = () => {
+    /*
     confirmingUserDeletion.value = false;
 
     form.clearErrors();
     form.reset();
-};
+    */
+    };
 </script>
 
 <template>

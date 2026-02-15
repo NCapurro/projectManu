@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\City;
 use App\Models\Province;
 use App\Models\Show;
+use App\Models\CarouselImage;
 
 use Inertia\Inertia;
 
@@ -38,10 +39,14 @@ class WelcomeController extends Controller
         $query->whereDate('fecha_hora', $request->date);
     }
 
+    // Obtenemos solo las imágenes activas
+    $carouselImages = CarouselImage::where('is_active', true)->get();
+
     return Inertia::render('Welcome', [
         'shows' => $query->paginate(10)->withQueryString(),
-        'provinces' => \App\Models\Province::with('cities')->get(),
+        'provinces' => Province::with('cities')->get(),
         'filters' => $request->only(['province', 'city', 'date']),
+        'carouselImages' => $carouselImages,
     ]);
 }
 }

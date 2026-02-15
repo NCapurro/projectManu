@@ -6,6 +6,8 @@ use App\Http\Controllers\WelcomeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SocialNetworkController;
+use App\Http\Controllers\CarouselImageController;
+
 use Inertia\Inertia;
 
 // LA CORRECCIÓN: Ahora la raíz usa tu controlador para cargar los datos
@@ -40,6 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::patch('/admin/shows/{show}/toggle-sold-out', [ShowController::class, 'toggleSoldOut'])->name('shows.toggle-sold-out');
 
+    Route::patch('/shows/{show}/toggle-visibility', [ShowController::class, 'toggleVisibility'])->name('shows.toggle-visibility');
+
     Route::delete('/admin/shows/{show}', [ShowController::class, 'destroy'])->name('shows.destroy');
 
     // ABM de Redes
@@ -47,6 +51,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/redes', [SocialNetworkController::class, 'store'])->name('redes.store');
     Route::patch('/admin/redes/{socialNetwork}', [SocialNetworkController::class, 'update'])->name('redes.update');
     Route::delete('/admin/redes/{socialNetwork}', [SocialNetworkController::class, 'destroy'])->name('redes.destroy');
+
+    Route::prefix('admin/carousel')->name('carousel.')->group(function () {
+    Route::get('/', [CarouselImageController::class, 'index'])->name('index');
+    Route::post('/', [CarouselImageController::class, 'store'])->name('store');
+    Route::patch('/{image}/toggle', [CarouselImageController::class, 'toggle'])->name('toggle');
+    Route::delete('/{image}', [CarouselImageController::class, 'destroy'])->name('destroy');
+});
+
+
 });
 
 require __DIR__.'/auth.php';

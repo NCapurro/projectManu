@@ -14,28 +14,53 @@ use Inertia\Inertia;
 
 class ShowController extends Controller
 {
-    public function index()
+    public function index(Request $request)
 {
-    // El with() es clave para que city y province no lleguen null
-    $shows = \App\Models\Show::with('city.province')
-                ->where('esta_publicado', true)
-                ->get();
+    $query = Show::with(['city.province'])
+        ->orderBy('fecha_hora', 'desc'); // Los más nuevos o próximos primero
 
-    return \Inertia\Inertia::render('Welcome', [
-        'shows' => $shows,
-        'canLogin' => \Illuminate\Support\Facades\Route::has('login'),
+    // Búsqueda en el servidor
+    if ($request->filled('search')) {
+        $term = '%' . $request->search . '%';
+        $query->where(function($q) use ($term) {
+            $q->where('lugar', 'like', $term)
+              ->orWhere('titulo', 'like', $term)
+              ->orWhereHas('city', function($c) use ($term) {
+                  $c->where('name', 'like', $term);
+              });
+        });
+    }
+
+    return Inertia::render('Admin/Shows/Index', [
+        'shows' => $query->paginate(10)->withQueryString(),
+        'filters' => $request->only(['search']),
     ]);
 }
 
-    public function adminIndex()
-{
-    // En el admin queremos ver TODOS, incluso los no publicados
-    $shows = Show::with('city.province')->orderBy('fecha_hora', 'desc')->get();
-    
-    return Inertia::render('Dashboard', [
-        'shows' => $shows
-    ]);
-}
+    public function adminIndex(Request $request)
+    {
+        $query = Show::with(['city.province'])
+            ->orderBy('fecha_hora', 'desc');
+
+        // Búsqueda en el servidor para el Admin
+        if ($request->filled('search')) {
+            $term = '%' . $request->search . '%';
+            $query->where(function($q) use ($term) {
+                $q->where('lugar', 'like', $term)
+                  ->orWhere('titulo', 'like', $term)
+                  ->orWhereHas('city', function($c) use ($term) {
+                      $c->where('name', 'like', $term);
+                  });
+            });
+        }
+
+        return Inertia::render('Dashboard', [
+            // IMPORTANTE: Paginar para que coincida con la vista
+            'shows' => $query->paginate(10)->withQueryString(),
+            // IMPORTANTE: Enviar los filtros para que el input no rompa la página
+            'filters' => $request->only(['search']),
+        ]);
+    }
 
  public function create()
 {
@@ -129,4 +154,14 @@ public function toggleSoldOut(Show $show)
 
     return redirect()->back()->with('message', 'Estado de entradas actualizado.');
 }
+
+public function toggleVisibility(Show $show)
+{
+    $show->update([
+        'esta_publicado' => !$show->esta_publicado
+    ]);
+
+    return back()->with('message', $show->esta_publicado ? 'Show publicado en la web.' : 'Show movido a borradores.');
+}
+
 }

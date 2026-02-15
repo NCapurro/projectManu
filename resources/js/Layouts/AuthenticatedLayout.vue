@@ -22,7 +22,7 @@ const showingNavigationDropdown = ref(false);
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
+                                <Link :href="route('home')">
                                     <ApplicationLogo
                                         class="block h-9 w-auto fill-current text-gray-800"
                                     />
@@ -37,11 +37,15 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    Dashboard
+                                    Shows
                                 </NavLink>
                                 <NavLink :href="route('redes.index')" :active="route().current('redes.index')">
-    Redes Sociales
-</NavLink>
+                                    Redes Sociales
+                                </NavLink>
+                                <NavLink :href="route('carousel.index')" :active="route().current('carousel.index')">
+                                    Portada
+                                </NavLink>
+
                             </div>
                         </div>
 
