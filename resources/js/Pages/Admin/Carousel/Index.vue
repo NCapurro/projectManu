@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 
-const props = defineProps({ images: Array });
+const props = defineProps({ images: Array, currentTitle: String, currentSubtitle: String });
 
 const form = useForm({ image: null });
 
@@ -15,6 +15,16 @@ const uploadImage = () => {
 const toggleImage = (id) => router.patch(route('carousel.toggle', id));
 const deleteImage = (id) => {
     if(confirm('¿Borrar imagen?')) router.delete(route('carousel.destroy', id));
+};
+
+// NUEVO: Formulario para los textos
+const formTexts = useForm({
+    hero_title: props.currentTitle,
+    hero_subtitle: props.currentSubtitle
+});
+
+const saveTexts = () => {
+    formTexts.post(route('carousel.texts.update'));
 };
 </script>
 
@@ -29,6 +39,30 @@ const deleteImage = (id) => {
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
                 
+
+                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-sm uppercase tracking-widest text-gray-700 mb-6">Textos Principales</h3>
+                    
+                    <form @submit.prevent="saveTexts" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Título Grande</label>
+                            <input v-model="formTexts.hero_title" type="text" placeholder="Ej: Stand Up" class="w-full rounded-xl border-gray-300 focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Subtítulo (Botón amarillo)</label>
+                            <input v-model="formTexts.hero_subtitle" type="text" placeholder="Ej: Gira 2026" class="w-full rounded-xl border-gray-300 focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div class="md:col-span-2 flex justify-end">
+                            <button type="submit" :disabled="formTexts.processing" class="bg-black text-white px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50">
+                                {{ formTexts.processing ? 'Guardando...' : 'Guardar Textos' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+
+
+
                 <div class="bg-white p-8 rounded-[2rem] shadow-lg border border-gray-100">
                     <h3 class="font-bold text-lg mb-4 text-gray-700">Subir Nueva Foto</h3>
                     <div class="flex gap-4 items-center">

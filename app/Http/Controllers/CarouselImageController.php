@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\CarouselImage;
+use App\Models\Setting;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -11,8 +13,13 @@ class CarouselImageController extends Controller
 {
     public function index()
     {
+        $title = Setting::where('key', 'hero_title')->value('value') ?? '';
+    $subtitle = Setting::where('key', 'hero_subtitle')->value('value') ?? '';
+    
         return Inertia::render('Admin/Carousel/Index', [
-            'images' => CarouselImage::latest()->get()
+            'images' => CarouselImage::latest()->get(),
+            'title' => $title,
+            'subtitle' => $subtitle
         ]);
     }
 
@@ -44,4 +51,26 @@ class CarouselImageController extends Controller
         $image->delete();
         return back()->with('message', 'Imagen eliminada.');
     }
+
+    public function updateTexts(Request $request)
+{
+    $request->validate([
+        'hero_title' => 'nullable|string|max:255',
+        'hero_subtitle' => 'nullable|string|max:255',
+    ]);
+
+    // Usamos updateOrCreate: Si existe la clave, la actualiza. Si no, la crea.
+    Setting::updateOrCreate(
+        ['key' => 'hero_title'],
+        ['value' => $request->hero_title]
+    );
+
+    Setting::updateOrCreate(
+        ['key' => 'hero_subtitle'],
+        ['value' => $request->hero_subtitle]
+    );
+
+    return redirect()->back()->with('message', 'Textos actualizados.');
+}
+
 }

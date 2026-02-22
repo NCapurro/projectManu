@@ -45,6 +45,9 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('carousel.index')" :active="route().current('carousel.index')">
                                     Portada
                                 </NavLink>
+                                <NavLink :href="route('videos.index')" :active="route().current('videos.index')">
+                                    Videos
+                                </NavLink>
 
                             </div>
                         </div>

@@ -83,6 +83,13 @@ const submit = () => {
                                 <div v-if="form.errors.lugar" class="text-red-500 text-xs mt-1 font-bold">{{ form.errors.lugar }}</div>
                             </div>
                             
+
+                                <div>
+                                    <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Dirección Completa</label>
+                                    <input v-model="form.direccion" type="text" required class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3" placeholder="Ej: Av. Siempre Viva 123, CABA">
+                                    <div v-if="form.errors.direccion" class="text-red-500 text-xs mt-1 font-bold">{{ form.errors.direccion }}</div>
+
+                                </div>
                             <div>
                                 <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Fecha y Hora</label>
                                 <input v-model="form.fecha_hora" type="datetime-local" required class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 text-gray-700">

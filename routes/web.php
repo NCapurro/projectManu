@@ -7,6 +7,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SocialNetworkController;
 use App\Http\Controllers\CarouselImageController;
+use App\Http\Controllers\YoutubeVideoController;
 
 use Inertia\Inertia;
 
@@ -52,12 +53,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/admin/redes/{socialNetwork}', [SocialNetworkController::class, 'update'])->name('redes.update');
     Route::delete('/admin/redes/{socialNetwork}', [SocialNetworkController::class, 'destroy'])->name('redes.destroy');
 
-    Route::prefix('admin/carousel')->name('carousel.')->group(function () {
+    Route::prefix('admin/carousel')->name('carousel.')->group(function () { //OJOOOOOOOO
     Route::get('/', [CarouselImageController::class, 'index'])->name('index');
     Route::post('/', [CarouselImageController::class, 'store'])->name('store');
     Route::patch('/{image}/toggle', [CarouselImageController::class, 'toggle'])->name('toggle');
     Route::delete('/{image}', [CarouselImageController::class, 'destroy'])->name('destroy');
+    Route::post('/texts', [CarouselImageController::class, 'updateTexts'])->name('texts.update');
+
 });
+
+
+    Route::get('/admin/videos', [YoutubeVideoController::class, 'index'])->name('videos.index');
+    Route::post('/admin/videos', [YoutubeVideoController::class, 'store'])->name('videos.store');
+    Route::delete('/admin/videos/{video}', [YoutubeVideoController::class, 'destroy'])->name('videos.destroy');
 
 
 });

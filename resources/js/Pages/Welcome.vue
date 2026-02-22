@@ -8,6 +8,10 @@ const props = defineProps({
     provinces: Array,
     filters: Object,
     carouselImages: Array,
+    videos: Array,
+    hero_title: String,
+    hero_subtitle: String,
+    
 });
 
 
@@ -109,12 +113,17 @@ const formatTime = (dateString) => {
         </div>
         
         <div class="hidden md:flex items-center gap-6">
-            <div class="flex items-center gap-6 border-r border-white/10 pr-6 mr-2">
-                <a v-for="red in $page.props.social_networks" :key="red.id" :href="red.url" target="_blank"
-                   class="text-[14px] font-bold text-gray-400 hover:text-yellow-500 uppercase tracking-widest transition-colors">
-                    {{ red.name }}
-                </a>
-            </div>
+    <div class="flex items-center gap-6 border-r border-white/10 pr-6 mr-2">
+        <a v-for="red in $page.props.social_networks" :key="red.id" :href="red.url" target="_blank"
+           class="flex items-center gap-2 text-[14px] font-bold text-gray-400 hover:text-yellow-500 uppercase tracking-widest transition-colors group">
+            
+            <img v-if="red.icon" :src="'/storage/' + red.icon" 
+                 class="w-8 h-8 object-contain opacity-70 group-hover:opacity-100 transition-opacity" 
+                 :alt="red.name">
+            
+            {{ red.name }}
+        </a>
+    </div>
             <Link v-if="$page.props.auth.user" :href="route('dashboard')" 
                   class="bg-white/10 hover:bg-white/20 text-white px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border border-white/10 flex items-center gap-2">
                 <span>⚙️ Panel</span>
@@ -137,13 +146,20 @@ const formatTime = (dateString) => {
 
     <div v-show="isMobileMenuOpen" class="md:hidden absolute top-0 left-0 w-full bg-neutral-900 border-b border-white/10 shadow-2xl pt-24 pb-10 px-6 flex flex-col gap-6 z-40">
         <p class="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">Redes Sociales</p>
-        <div class="flex flex-col gap-4">
-            <a v-for="red in $page.props.social_networks" :key="red.id" :href="red.url" target="_blank"
-               class="text-xl font-black text-white hover:text-yellow-500 uppercase italic tracking-tighter transition-colors flex items-center justify-between group">
-                {{ red.name }}
-                <span class="text-gray-600 group-hover:text-yellow-500 text-sm">↗</span>
-            </a>
+       <div class="flex flex-col gap-4">
+    <a v-for="red in $page.props.social_networks" :key="red.id" :href="red.url" target="_blank"
+       class="text-xl font-black text-white hover:text-yellow-500 uppercase italic tracking-tighter transition-colors flex items-center justify-between group">
+        
+        <div class="flex items-center gap-3">
+            <img v-if="red.icon" :src="'/storage/' + red.icon" 
+                 class="w-8 h-8 object-contain" 
+                 :alt="red.name">
+            {{ red.name }}
         </div>
+
+        <span class="text-gray-600 group-hover:text-yellow-500 text-sm">↗</span>
+    </a>
+</div>
         <div v-if="$page.props.auth.user" class="mt-4 pt-6 border-t border-white/10">
             <Link :href="route('dashboard')" class="block w-full bg-white text-black py-4 rounded-xl text-center font-black uppercase tracking-widest text-sm hover:bg-yellow-500 transition-all">
                 ⚙️ Ir al Panel Admin
@@ -172,15 +188,18 @@ const formatTime = (dateString) => {
 
     <div class="relative z-20">
         <h2 class="text-7xl md:text-9xl font-black uppercase italic mb-4 tracking-tighter text-white drop-shadow-2xl">
-            Stand Up
+            {{ hero_title }}
         </h2>
         <p class="text-xl text-yellow-500 font-medium tracking-widest uppercase drop-shadow-lg bg-black/30 inline-block px-4 py-1 rounded-full backdrop-blur-sm border border-white/10">
-            Gira 2026
+            {{ hero_subtitle }}
         </p>
     </div>
 </header>
 
-        <main class="max-w-5xl mx-auto px-6 pb-20">
+       <main class="max-w-7xl mx-auto px-6 pb-20">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        
+        <div class="lg:col-span-8">
             <div class="flex flex-col gap-6 mb-12 pb-8 border-b border-white/10">
                 <div class="flex items-center justify-between">
                     <h3 class="text-2xl font-black italic uppercase tracking-tighter text-yellow-500">Cartelera</h3>
@@ -212,7 +231,8 @@ const formatTime = (dateString) => {
                             <div class="flex flex-col text-center md:text-left">
                                 <span class="text-yellow-500 font-bold uppercase text-sm tracking-widest mb-1">{{ formatDate(show.fecha_hora) }} — {{ formatTime(show.fecha_hora) }} HS</span>
                                 <h3 class="text-3xl md:text-5xl font-black group-hover:text-yellow-500 transition-colors uppercase italic text-white leading-tight">{{ show.lugar }}</h3>
-                                <p class="text-gray-400 font-medium italic mt-2 text-lg">{{ show.city.name }}, {{ show.city.province.name }}</p>
+                                <p class="text-gray-400 font-medium italic mt-1 text-lg">{{ show.direccion }}</p>
+                                <p class="text-gray-400 font-medium italic mt-0 text-lg">{{ show.city.name }}, {{ show.city.province.name }}</p>
                             </div>
                         </div>
                         <div class="flex items-center justify-center md:justify-end shrink-0">
@@ -236,7 +256,41 @@ const formatTime = (dateString) => {
                 <p class="text-gray-600 text-2xl font-bold italic">No hay funciones programadas para esta selección.</p>
                 <button @click="clearFilters" class="mt-6 bg-yellow-500/10 text-yellow-500 px-8 py-3 rounded-full font-black uppercase text-sm tracking-widest hover:bg-yellow-500 hover:text-black transition-all">Ver todos los shows</button>
             </div>
-        </main>
+        </div>
+
+        <div class="lg:col-span-4">
+            <div class="sticky top-32 bg-neutral-900/50 p-6 rounded-3xl border border-white/10">
+                <div class="flex items-center gap-3 mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                    <h3 class="text-xl font-black italic uppercase tracking-tighter text-white">Stand Up Clips</h3>
+                </div>
+                
+                <div class="flex flex-col gap-6">
+    
+    <div v-for="video in videos" :key="video.id" class="rounded-xl overflow-hidden border border-white/10 aspect-video bg-black shadow-lg">
+        <iframe class="w-full h-full" 
+                :src="'https://www.youtube.com/embed/' + video.video_id + '?controls=1'" 
+                :title="video.title || 'Video de YouTube'" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+        </iframe>
+    </div>
+
+    <div v-if="!videos || videos.length === 0" class="text-center py-8 border-2 border-dashed border-white/10 rounded-xl">
+        <p class="text-gray-500 text-sm font-bold uppercase tracking-widest">Próximamente nuevos clips</p>
+    </div>
+
+</div>
+
+                <a href="https://youtube.com/@manuhorazzi" target="_blank" class="mt-6 block w-full text-center bg-red-600 hover:bg-red-700 text-white py-3 rounded-full font-bold uppercase tracking-widest text-xs transition-colors">
+                    Ir al canal
+                </a>
+            </div>
+        </div>
+
+    </div>
+</main>
 
         <footer class="p-16 border-t border-white/10 text-center bg-neutral-950">
             <div class="flex justify-center flex-wrap gap-12 mb-8">

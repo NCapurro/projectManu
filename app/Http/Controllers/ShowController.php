@@ -7,6 +7,8 @@ use App\Models\Show;
 use App\Models\Province;
 use App\Models\City;
 
+
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -74,25 +76,63 @@ class ShowController extends Controller
 
 public function store(Request $request)
 {
+    // 1. VALIDACIÓN ESTRICTA (La muralla de seguridad)
     $validated = $request->validate([
-        'titulo'         => 'nullable|string|max:100',
-        'lugar'          => 'required|string|max:255',
-        'fecha_hora'     => 'required|date',
-        'city_id'        => 'required|exists:cities,id',
-        'ticket_url'     => 'required|url',
-        'esta_publicado' => 'required|boolean',
-        'flyer'          => 'nullable|image|mimes:jpg,jpeg,png|max:8192', // Max 2MB
+        'titulo' => 'nullable|string|max:255',
+        'lugar' => 'required|string|max:255',
+        'direccion' => 'required|string|max:255',
+        'fecha_hora' => 'required|date',
+        'ticket_url' => 'required|url|max:255',
+        'esta_publicado' => 'boolean',
+        'flyer' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096', // Máx 4MB, solo imágenes seguras
+        
+        // Lógica de validación cruzada para Provincias/Ciudades
+        'province_id' => 'nullable|exists:provinces,id',
+        'new_province_name' => 'required_without:province_id|nullable|string|max:255|unique:provinces,name',
+        
+        'city_id' => 'nullable|exists:cities,id',
+        'new_city_name' => 'required_without:city_id|nullable|string|max:255',
     ]);
 
-    // Lógica para guardar la imagen
-    if ($request->hasFile('flyer')) {
-        $path = $request->file('flyer')->store('flyers', 'public');
-        $validated['flyer_path'] = $path;
+    // 2. Lógica para crear Provincia si es nueva
+    $provinceId = $request->province_id;
+    if (!$provinceId && $request->new_province_name) {
+        $formattedProvinceName = Str::title(strtolower($request->new_province_name));
+        $province = Province::create(['name' => $formattedProvinceName, 'country_id' => 1]); // Asumimos country_id=1 para simplificar
+        $provinceId = $province->id;
     }
 
-    Show::create($validated);
+    // 3. Lógica para crear Ciudad si es nueva
+    $cityId = $request->city_id;
+    if (!$cityId && $request->new_city_name) {
+        $formattedCityName = Str::title(strtolower($request->new_city_name));
+        $city = City::create([
+            'name' => $formattedCityName,
+            'province_id' => $provinceId
+        ]);
+        $cityId = $city->id;
+    }
 
-    return redirect()->route('dashboard')->with('message', '¡Show creado con imagen!');
+    // 4. Procesar la imagen (si subió una)
+    $flyerPath = null;
+    if ($request->hasFile('flyer')) {
+        $flyerPath = $request->file('flyer')->store('flyers', 'public');
+    }
+
+    // 5. Guardar el Show de forma segura
+    Show::create([
+        'titulo' => $validated['titulo'],
+        'lugar' => $validated['lugar'],
+        'direccion' => $validated['direccion'],
+        'city_id' => $cityId,
+        'fecha_hora' => $validated['fecha_hora'],
+        'ticket_url' => $validated['ticket_url'],
+        'esta_publicado' => $request->boolean('esta_publicado'),
+        'flyer_path' => $flyerPath,
+    ]);
+
+    // Redireccionar con mensaje de éxito
+    return redirect()->route('dashboard')->with('success', 'Show creado exitosamente.');
 }
 
 public function destroy(Show $show)
@@ -120,6 +160,7 @@ public function update(Request $request, Show $show)
         $validated = $request->validate([
             'titulo'         => 'nullable|string|max:100',
             'lugar'          => 'required|string|max:255',
+            'direccion'      => 'required|string|max:255',
             'fecha_hora'     => 'required|date',
             'city_id'        => 'required|exists:cities,id',
             'ticket_url'     => 'required|url',
