@@ -18,11 +18,19 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Manu Admin',
-            'email' => 'manu@hotmail.com',
-            'password' => bcrypt('password')
+            'name' => 'Nicolas Admin',
+            'email' => 'nicolascapurro23@gmail.com',
+            'password' => bcrypt('Reiayanami_2398')
         ]);
+        
+        User::factory()->create([
+            'name' => 'Manu Admin',
+            'email' => 'valkirian@gmail.com',
+            'password' => bcrypt('manuhorazzi')
+        ]);
+
+
         $this->call(GeoSeeder::class);
-        $this->call(ShowSeeder::class);
+        
     }
 }

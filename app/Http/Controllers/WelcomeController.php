@@ -23,7 +23,7 @@ class WelcomeController extends Controller
     $heroImage = CarouselImage::where('is_active', true)->first();
     $imageUrl = $heroImage ? asset('storage/' . $heroImage->image_path) : asset('img/default.jpg');
 
-    $query = \App\Models\Show::with(['city.province'])
+    $query = \App\Models\Show::with(['city.province.country'])
         ->where('esta_publicado', true)
         ->where('fecha_hora', '>=', now())
         ->orderBy('fecha_hora', 'asc');

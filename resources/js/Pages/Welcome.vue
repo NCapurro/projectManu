@@ -229,11 +229,18 @@ const formatTime = (dateString) => {
                                 <img :src="'/storage/' + show.flyer_path" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Flyer">
                             </div>
                             <div class="flex flex-col text-center md:text-left">
-                                <span class="text-yellow-500 font-bold uppercase text-sm tracking-widest mb-1">{{ formatDate(show.fecha_hora) }} — {{ formatTime(show.fecha_hora) }} HS</span>
-                                <h3 class="text-3xl md:text-5xl font-black group-hover:text-yellow-500 transition-colors uppercase italic text-white leading-tight">{{ show.lugar }}</h3>
-                                <p class="text-gray-400 font-medium italic mt-1 text-lg">{{ show.direccion }}</p>
-                                <p class="text-gray-400 font-medium italic mt-0 text-lg">{{ show.city.name }}, {{ show.city.province.name }}</p>
-                            </div>
+    <span class="text-yellow-500 font-bold uppercase text-sm tracking-widest mb-1">{{ formatDate(show.fecha_hora) }} — {{ formatTime(show.fecha_hora) }} HS</span>
+    <h3 class="text-3xl md:text-5xl font-black group-hover:text-yellow-500 transition-colors uppercase italic text-white leading-tight">{{ show.lugar }}</h3>
+    <p class="text-gray-400 font-medium italic mt-1 text-lg">{{ show.direccion }}</p>
+    
+    <p class="text-gray-400 font-medium italic mt-0 text-lg">
+        {{ show.city.name }}, {{ show.city.province.name }}
+        
+        <span v-if="show.city.province.country && show.city.province.country.name !== 'Argentina'" class="text-yellow-500 font-bold ml-1 not-italic">
+            — {{ show.city.province.country.name }} ✈️
+        </span>
+    </p>
+</div>
                         </div>
                         <div class="flex items-center justify-center md:justify-end shrink-0">
                             <div v-if="show.sold_out" class="border-4 border-red-600 text-red-600 px-8 py-3 rounded-md font-black uppercase rotate-[-5deg] text-xl shadow-lg shadow-red-600/20 whitespace-nowrap">Agotado</div>
@@ -298,7 +305,16 @@ const formatTime = (dateString) => {
                     {{ red.name }}
                 </a>
             </div>
-            <p class="text-[11px] text-gray-700 uppercase tracking-[0.4em] font-medium">Desarrollado por NC SOFTWARE — 2026</p>
+            
+            <p class="text-[11px] text-gray-700 uppercase tracking-[0.4em] font-medium mb-4">
+                Desarrollado por NC SOFTWARE — 2026
+            </p>
+            
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfMbhpWBiSUnX9TYKZDavGH3yeciQkKdKLo2I6DKUhOkurz5g/viewform?usp=dialog" target="_blank" class="inline-flex items-center gap-2 text-[10px] text-gray-500 hover:text-yellow-500 uppercase tracking-[0.2em] font-bold transition-colors group">
+                ¿Querés tu propia página web? Cotizá tu proyecto 
+                <span class="text-yellow-500 group-hover:translate-x-1 transition-transform">→</span>
+            </a>
+            
         </footer>
     </div>
 </template>

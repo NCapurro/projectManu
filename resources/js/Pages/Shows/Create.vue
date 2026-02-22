@@ -3,30 +3,74 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
+// IMPORTANTE: Ahora recibimos 'countries', y asumimos que adentro traen sus 'provinces', 
+// y esas 'provinces' traen sus 'cities'.
 const props = defineProps({
-    provinces: Array
+    countries: Array
 });
 
 // --- Estados para alternar entre Select e Input ---
+const isAddingCountry = ref(false);
 const isAddingProvince = ref(false);
 const isAddingCity = ref(false);
+
+const selectedCountryId = ref('');
 const selectedProvinceId = ref('');
 
 const form = useForm({
     titulo: '',
     lugar: '',
     direccion: '',
-    province_id: '', // Agregado para mandarlo al backend si usa una existente
+    country_id: '',      // Agregado
+    new_country_name: '',// Agregado
+    province_id: '',
+    new_province_name: '',
     city_id: '', 
-    new_province_name: '', // Para la provincia nueva
-    new_city_name: '',     // Para la ciudad nueva
+    new_city_name: '',
     fecha_hora: '',
     ticket_url: '',
     esta_publicado: true,
     flyer: null,
 });
 
+// --- Lógica de Países ---
+const handleCountryChange = () => {
+    if (selectedCountryId.value === 'new') {
+        isAddingCountry.value = true;
+        isAddingProvince.value = true; // Si el país es nuevo, la provincia también
+        isAddingCity.value = true;     // y la ciudad también
+        
+        selectedCountryId.value = '';
+        form.country_id = '';
+        selectedProvinceId.value = '';
+        form.province_id = '';
+        form.city_id = '';
+    } else {
+        form.country_id = selectedCountryId.value;
+        // Reseteamos cascada hacia abajo
+        selectedProvinceId.value = '';
+        form.province_id = '';
+        form.city_id = '';
+        isAddingProvince.value = false;
+        form.new_province_name = '';
+        isAddingCity.value = false;
+        form.new_city_name = '';
+    }
+};
+
+const cancelNewCountry = () => {
+    isAddingCountry.value = false;
+    form.new_country_name = '';
+    selectedCountryId.value = '';
+    form.country_id = '';
+};
+
 // --- Lógica de Provincias ---
+const filteredProvinces = computed(() => {
+    const country = props.countries?.find(c => c.id == selectedCountryId.value);
+    return country ? country.provinces : [];
+});
+
 const handleProvinceChange = () => {
     if (selectedProvinceId.value === 'new') {
         isAddingProvince.value = true;
@@ -53,7 +97,7 @@ const cancelNewProvince = () => {
 
 // --- Lógica de Ciudades ---
 const filteredCities = computed(() => {
-    const province = props.provinces.find(p => p.id == selectedProvinceId.value);
+    const province = filteredProvinces.value.find(p => p.id == selectedProvinceId.value);
     return province ? province.cities : [];
 });
 
@@ -75,7 +119,9 @@ const submit = () => {
         forceFormData: true,
         onSuccess: () => {
             form.reset();
+            selectedCountryId.value = '';
             selectedProvinceId.value = '';
+            isAddingCountry.value = false;
             isAddingProvince.value = false;
             isAddingCity.value = false;
         },
@@ -92,7 +138,7 @@ const submit = () => {
         </template>
 
         <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-3xl p-8 border border-gray-100">
                     
                     <form @submit.prevent="submit" class="space-y-6">
@@ -118,24 +164,39 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 p-4 rounded-xl border border-gray-200 border-dashed">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50/50 p-4 rounded-xl border border-gray-200 border-dashed">
                             
                             <div>
-                                <label class="block font-bold text-xs uppercase tracking-widest text-gray-700">Provincia</label>
+                                <label class="block font-bold text-xs uppercase tracking-widest text-gray-700">País</label>
                                 
-                                <div v-if="!isAddingProvince">
-                                    <select v-model="selectedProvinceId" @change="handleProvinceChange" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 cursor-pointer">
-                                        <option value="">Seleccione una provincia</option>
-                                        <option v-for="prov in provinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option>
-                                        <option value="new" class="font-bold text-indigo-600 bg-indigo-50">+ Agregar nueva provincia...</option>
+                                <div v-if="!isAddingCountry">
+                                    <select v-model="selectedCountryId" @change="handleCountryChange" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 cursor-pointer">
+                                        <option value="">Seleccione país</option>
+                                        <option v-for="country in countries" :key="country.id" :value="country.id">{{ country.name }}</option>
+                                        <option value="new" class="font-bold text-indigo-600 bg-indigo-50">+ Agregar país...</option>
                                     </select>
                                 </div>
                                 
                                 <div v-else class="mt-1 flex gap-2">
-                                    <input v-model="form.new_province_name" type="text" placeholder="Nombre de la provincia" class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                    <button type="button" @click="cancelNewProvince" class="px-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors text-sm font-bold" title="Cancelar">
-                                        ✕
-                                    </button>
+                                    <input v-model="form.new_country_name" type="text" placeholder="Nuevo país" class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                    <button type="button" @click="cancelNewCountry" class="px-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors text-sm font-bold" title="Cancelar">✕</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-xs uppercase tracking-widest text-gray-700">Provincia / Estado</label>
+                                
+                                <div v-if="!isAddingProvince">
+                                    <select v-model="selectedProvinceId" @change="handleProvinceChange" :disabled="!selectedCountryId" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer">
+                                        <option value="">Seleccione provincia</option>
+                                        <option v-for="prov in filteredProvinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option>
+                                        <option v-if="selectedCountryId" value="new" class="font-bold text-indigo-600 bg-indigo-50">+ Agregar provincia...</option>
+                                    </select>
+                                </div>
+                                
+                                <div v-else class="mt-1 flex gap-2">
+                                    <input v-model="form.new_province_name" type="text" placeholder="Nueva provincia" class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                    <button type="button" @click="cancelNewProvince" :disabled="isAddingCountry" class="px-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors text-sm font-bold disabled:opacity-50" title="Cancelar">✕</button>
                                 </div>
                             </div>
 
@@ -144,17 +205,15 @@ const submit = () => {
                                 
                                 <div v-if="!isAddingCity">
                                     <select v-model="form.city_id" @change="handleCityChange" :disabled="!selectedProvinceId" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer">
-                                        <option value="">Seleccione una ciudad</option>
+                                        <option value="">Seleccione ciudad</option>
                                         <option v-for="city in filteredCities" :key="city.id" :value="city.id">{{ city.name }}</option>
-                                        <option v-if="selectedProvinceId" value="new" class="font-bold text-indigo-600 bg-indigo-50">+ Agregar nueva ciudad...</option>
+                                        <option v-if="selectedProvinceId" value="new" class="font-bold text-indigo-600 bg-indigo-50">+ Agregar ciudad...</option>
                                     </select>
                                 </div>
 
                                 <div v-else class="mt-1 flex gap-2">
-                                    <input v-model="form.new_city_name" type="text" placeholder="Nombre de la ciudad" class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                    <button type="button" @click="cancelNewCity" class="px-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors text-sm font-bold" title="Cancelar">
-                                        ✕
-                                    </button>
+                                    <input v-model="form.new_city_name" type="text" placeholder="Nueva ciudad" class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                    <button type="button" @click="cancelNewCity" :disabled="isAddingProvince" class="px-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors text-sm font-bold disabled:opacity-50" title="Cancelar">✕</button>
                                 </div>
                             </div>
                         </div>
