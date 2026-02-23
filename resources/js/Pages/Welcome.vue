@@ -221,7 +221,7 @@ const formatTime = (dateString) => {
                     <div class="relative w-full">
   <span 
     v-if="!selectedDate" 
-    class="absolute left-6 top-1/2 -translate-y-1/2 text-white/40 font-bold pointer-events-none"
+    class="absolute left-6 top-1/2 -translate-y-1/2 text-white/10 font-bold pointer-events-none"
   >
     Fecha
   </span>
