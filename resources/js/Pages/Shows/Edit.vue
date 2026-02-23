@@ -1,46 +1,60 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
     show: Object,
-    provinces: Array
+    countries: Array // Corregido a minúscula para que coincida con el controlador
 });
 
-// Inicializamos la provincia según la ciudad que ya tiene el show
-const selectedProvinceId = ref(props.show.city.province_id);
+// 1. Inicializamos País y Provincia según los datos que ya tiene el show
+const selectedCountryId = ref(props.show.city?.province?.country_id || '');
+const selectedProvinceId = ref(props.show.city?.province_id || '');
 
 const form = useForm({
-    /** * TRUCO TÉCNICO: Laravel no procesa archivos en PATCH. 
-     * Enviamos como POST y spoofeamos el método.
-     */
     _method: 'patch', 
     titulo: props.show.titulo ?? '',
     lugar: props.show.lugar,
     direccion: props.show.direccion ?? '',
-    city_id: props.show.city_id,
-    // Formateo de fecha para el input datetime-local (YYYY-MM-DDThh:mm)
+    city_id: props.show.city_id || '',
     fecha_hora: props.show.fecha_hora ? props.show.fecha_hora.substring(0, 16) : '',
     ticket_url: props.show.ticket_url,
     esta_publicado: Boolean(props.show.esta_publicado),
     sold_out: Boolean(props.show.sold_out),
-    flyer: null, // Aquí irá el nuevo archivo si se selecciona
+    flyer: null, 
 });
 
-// Lógica para filtrar ciudades según la provincia seleccionada
+// 2. Filtramos Provincias basándonos en el País seleccionado
+const filteredProvinces = computed(() => {
+    if (!props.countries || !selectedCountryId.value) return [];
+    const country = props.countries.find(c => c.id === selectedCountryId.value);
+    return country ? country.provinces : [];
+});
+
+// 3. Filtramos Ciudades basándonos en la Provincia seleccionada
 const filteredCities = computed(() => {
-    const province = props.provinces.find(p => p.id == selectedProvinceId.value);
+    if (!filteredProvinces.value.length || !selectedProvinceId.value) return [];
+    const province = filteredProvinces.value.find(p => p.id === selectedProvinceId.value);
     return province ? province.cities : [];
 });
 
+// 4. UX: Si cambian el país, reseteamos la provincia y la ciudad
+watch(selectedCountryId, () => {
+    selectedProvinceId.value = '';
+    form.city_id = '';
+});
+
+// UX: Si cambian la provincia, reseteamos la ciudad
+watch(selectedProvinceId, () => {
+    form.city_id = '';
+});
+
 const submit = () => {
-    // Usamos .post() por el manejo de archivos, el _method se encarga del resto
     form.post(route('shows.update', props.show.id), {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
-            // Opcional: limpiar el input de archivo tras éxito
             form.flyer = null;
         }
     });
@@ -83,13 +97,12 @@ const submit = () => {
                                 <div v-if="form.errors.lugar" class="text-red-500 text-xs mt-1 font-bold">{{ form.errors.lugar }}</div>
                             </div>
                             
+                            <div>
+                                <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Dirección Completa</label>
+                                <input v-model="form.direccion" type="text" required class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3" placeholder="Ej: Av. Siempre Viva 123, CABA">
+                                <div v-if="form.errors.direccion" class="text-red-500 text-xs mt-1 font-bold">{{ form.errors.direccion }}</div>
+                            </div>
 
-                                <div>
-                                    <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Dirección Completa</label>
-                                    <input v-model="form.direccion" type="text" required class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3" placeholder="Ej: Av. Siempre Viva 123, CABA">
-                                    <div v-if="form.errors.direccion" class="text-red-500 text-xs mt-1 font-bold">{{ form.errors.direccion }}</div>
-
-                                </div>
                             <div>
                                 <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Fecha y Hora</label>
                                 <input v-model="form.fecha_hora" type="datetime-local" required class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 text-gray-700">
@@ -97,17 +110,27 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">País</label>
+                                <select v-model="selectedCountryId" class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3">
+                                    <option value="" disabled>Seleccionar País</option>
+                                    <option v-for="country in countries" :key="country.id" :value="country.id">{{ country.name }}</option>
+                                </select>
+                            </div>
+
                             <div>
                                 <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Provincia</label>
-                                <select v-model="selectedProvinceId" class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3">
-                                    <option v-for="prov in provinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option>
+                                <select v-model="selectedProvinceId" :disabled="!selectedCountryId" class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 disabled:opacity-50 disabled:bg-gray-50">
+                                    <option value="" disabled>Seleccionar Provincia</option>
+                                    <option v-for="prov in filteredProvinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Ciudad</label>
-                                <select v-model="form.city_id" required class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3">
+                                <select v-model="form.city_id" required :disabled="!selectedProvinceId" class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 disabled:opacity-50 disabled:bg-gray-50">
+                                    <option value="" disabled>Seleccionar Ciudad</option>
                                     <option v-for="city in filteredCities" :key="city.id" :value="city.id">{{ city.name }}</option>
                                 </select>
                                 <div v-if="form.errors.city_id" class="text-red-500 text-xs mt-1 font-bold">{{ form.errors.city_id }}</div>
@@ -115,31 +138,24 @@ const submit = () => {
                         </div>
 
                         <div>
-                            <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">URL de Venta (Ticketek, PlateaVía, etc)</label>
+                            <label class="block font-bold text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">URL de Venta</label>
                             <input v-model="form.ticket_url" type="url" required class="w-full border-gray-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3" placeholder="https://...">
                             <div v-if="form.errors.ticket_url" class="text-red-500 text-xs mt-1 font-bold">{{ form.errors.ticket_url }}</div>
                         </div>
 
                         <div class="border-2 border-dashed border-gray-200 p-8 rounded-[2rem] bg-gray-50/50">
                             <label class="block font-black text-xs text-gray-500 mb-4 uppercase tracking-[0.2em]">Flyer del Show</label>
-                            
                             <div class="flex flex-col md:flex-row gap-8 items-center">
                                 <div v-if="show.flyer_path && !form.flyer" class="shrink-0">
                                     <p class="text-[10px] text-gray-400 mb-2 font-bold uppercase">Imagen Actual:</p>
                                     <img :src="'/storage/' + show.flyer_path" class="w-28 h-40 object-cover rounded-xl shadow-md border-2 border-white" />
                                 </div>
-
                                 <div class="flex-grow w-full">
                                     <p class="text-xs text-gray-500 mb-3 font-medium">Subí una nueva imagen para reemplazar la anterior:</p>
                                     <input type="file" 
                                            @input="form.flyer = $event.target.files[0]" 
                                            accept="image/*"
-                                           class="block w-full text-sm text-gray-500 
-                                                  file:mr-4 file:py-2 file:px-6 
-                                                  file:rounded-full file:border-0 
-                                                  file:text-xs file:font-black file:uppercase
-                                                  file:bg-indigo-600 file:text-white 
-                                                  hover:file:bg-indigo-700 cursor-pointer transition-all shadow-md" />
+                                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-6 file:rounded-full file:border-0 file:text-xs file:font-black file:uppercase file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer transition-all shadow-md" />
                                     
                                     <div v-if="form.progress" class="mt-4 w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                                         <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" 
