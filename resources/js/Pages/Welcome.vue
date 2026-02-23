@@ -217,7 +217,15 @@ const formatTime = (dateString) => {
                         <option value="">Seleccionar Ciudad</option>
                         <option v-for="c in filteredCities" :key="c.id" :value="c.id" class="bg-black text-white">{{ c.name }}</option>
                     </select>
-                    <input type="date" v-model="selectedDate" class="bg-white/5 border-2 border-white/10 text-white rounded-full px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 focus:bg-black appearance-none transition-all cursor-pointer">
+                    
+                    <input 
+  type="text" 
+  placeholder="Seleccionar Fecha" 
+  v-model="selectedDate" 
+  onfocus="(this.type='date')" 
+  onblur="if(!this.value)this.type='text'"
+  class="bg-white/5 border-2 border-white/10 text-white rounded-full px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 focus:bg-black appearance-none transition-all cursor-pointer w-full"
+>
                 </div>
             </div>
 
