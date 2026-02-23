@@ -218,14 +218,19 @@ const formatTime = (dateString) => {
                         <option v-for="c in filteredCities" :key="c.id" :value="c.id" class="bg-black text-white">{{ c.name }}</option>
                     </select>
                     
-                    <div class="relative group">
+                    <div class="relative w-full">
+  <span 
+    v-if="!selectedDate" 
+    class="absolute left-6 top-1/2 -translate-y-1/2 text-white/40 font-bold pointer-events-none"
+  >
+    Fecha
+  </span>
+
   <input 
     type="date" 
     v-model="selectedDate" 
-    class="relative bg-white/5 border-2 border-white/10 text-white rounded-full px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 focus:bg-black appearance-none transition-all cursor-pointer w-full
-           before:content-['Fecha'] before:absolute before:left-6 before:text-white/40 before:font-bold
-           invalid:before:block valid:before:hidden"
-    onfocus="this.showPicker()"
+    @focus="$event.target.showPicker()"
+    class="bg-white/5 border-2 border-white/10 text-white rounded-full px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 focus:bg-black appearance-none transition-all cursor-pointer w-full block"
   >
 </div>
                 </div>
